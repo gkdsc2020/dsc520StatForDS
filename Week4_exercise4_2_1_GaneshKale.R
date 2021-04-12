@@ -3,6 +3,7 @@
 # Date: 2021-04-10
 
 library(pastecs)
+
 ############################
 # Exercise 4.2.1 - Scores
 ############################
@@ -43,19 +44,23 @@ plot(sports$Score, sports$Count,col = 'blue', type = 'l', main = 'Students Score
      points(regular$Score,regular$Count, col = 'red', type = 'l')
 
 # Comparing and contrasting the point distributions between the two section, looking at both tendency and consistency: Can you say that one section tended to score more points than the other? 
-#  we can say that students with Regular section tended to more scores as compared to students from Sports section
-# The average of scores justifies that 
+#  Based mean and median values we can say that students with Regular section tended to more scores as compared to students from Sports section
+# The mean and median of scores justifies this. Mean and median of students from Regular section is greater that sports section 
 mean(sports$Score)
 mean(regular$Score)
 median(sports$Score)
 median(regular$Score)
+
+
 # Did every student in one section score more points than every student in the other section? If not, explain what a statistical tendency means in this context.
-# Not every student from one section score more than other section,  
-# statistical tendency - 
+# Not every student from one section scored more than other section,  
+# We can measure the distribution of data or central tendency using mean, mode and median but when it comes to the
+# two groups comparison then all of these should be equal but we can not determine the tendency of data by just comparing
+# these values within two groups.
 
 # What could be one additional variable that was not mentioned in the narrative that could be influencing the point distributions between the two sections?
 # I think the the data set has count meaning number of students and scores they received for specific section,
-# but here one variable missing is , we do not have information about out of what 
+# but here one variable missing is course total, we do not have info about student received score out of what number.
 
 
 
