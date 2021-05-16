@@ -1,0 +1,223 @@
+---
+title: "Week 8-9 - Exercise 8.2"
+author: "Ganesh Kale"
+date: "May 14, 2021"
+output:
+  pdf_document: default
+  word_document: default
+---
+## Load the required packages
+```{r message=FALSE}
+library(readxl)
+library(dplyr)
+library(QuantPsyc)
+library(car)
+```
+
+## load the data which was transformed by removing unwanted columns and na/null values
+```{r echo=FALSE}
+house <- read_excel('week-7-housing.xlsx')
+select <- dplyr::filter
+house1 <- house %>% filter(`Sale Price` > 1000, year_built > 1965, bedrooms < 6,`Sale Price` < 2300000,
+                 bedrooms > 1,square_feet_total_living < 7000 , sq_ft_lot < 75000, bath_full_count < 7) 
+select <- dplyr::select
+house1 <- house1 %>% select(`Sale Price`,building_grade,square_feet_total_living,bedrooms,bath_full_count,year_built,sq_ft_lot,zip5)
+house1 <- house1 %>% mutate(total_area = square_feet_total_living + sq_ft_lot)
+head(house1)
+```
+
+## _Explain any transformations or modifications you made to the dataset_
+##### 
+1. Checked and removed outliers from the features
+2. Created new column - sq feet total lot size - total_area = square_feet_total_living + sq_ft_lot
+3. Removed NA or null value rows from the data sets
+4. Changed Sale Date type to Date format
+5. Removed unwanted columns such as  - sale date, sale_reason, sale_instrument, addr_full, cityname, postalctyn,lon,lat, present use etc.
+
+
+## _b.ii] Create Two variables....._
+##### Created house.1 dataframe with sale price and sq_ft_lot for simple regression
+##### Created house.2 dataframe with sale price and other variables for multiple regression, selected predictors: - sq_ft_lot,building_grade,square_feet_total_living,bedrooms,bath_full_count,year_built
+##### The additional predictors selected based on
+1. created scatter plot of each predictor and calculated correlation coefficient to see how strong they are related.
+2. Checked multicollinearity of all the predictors pairs and removed the ones which have strong correlations
+3. Checked the variance of predictors and they do not have 0 variance included in dataset in addition to above steps.
+
+```{r}
+house.1 <- house1 %>% select(`Sale Price` ,sq_ft_lot)
+print("Simple Regression variable")
+head(house.1)
+house.2 <- house1 %>% select(`Sale Price` ,sq_ft_lot,building_grade,square_feet_total_living,bedrooms,bath_full_count,year_built)
+print("Multiple Regression variable")
+head(house.2)
+
+simple_result <- lm(`Sale Price` ~ sq_ft_lot, data = house.1)
+
+formula = `Sale Price` ~ sq_ft_lot + building_grade + square_feet_total_living + bedrooms + bath_full_count + year_built
+multi_result <- lm(formula , data = house.2)
+
+```
+
+## _b iii] Execute a summary() function on two variables...._
+##### Summary result of Simple Linear regression and Multiple Linear Regression 
+```{r}
+summary(simple_result)
+summary(multi_result)
+```
+##### R-squared - It is a measure of how much of the variability in the outcome is accounted for by the predictors.
+Adjusted R-squared - It gives some idea of how well model generalizes, that means when we implement the same model on the population, what would be value of R-squared on population data.
+
+Simple Regression Result - Based on this result, the R2 values is 0.05585, which tells that sq_ft_lot variable accounts for 5.6% variation in the sale price of house, which indicates that there are other variables that have high impact the house sale price. The Adjusted R2 is same as R2, which tells that variation in sales price when same model was run on entire population.
+
+Multiple Regression Result - Based on the result, R2 value is 0.5814, which tells that all the predictors accounts for 58% variation in house sale price. The adjusted R2 is 0.5812 and the difference between R2 and Adjusted R2 is 0.0002, This explains that if the models would have run on the population there could have shrinkage of 0.02% in the R2 value and which is very trivial or minimal difference, so we can say that model will predict similar result when run on population.
+
+Overall, addition of more predictor variables improved the R2 value, which explains that large variation in house sales price when we include more predictors. Additional predictors account for more variation in the sales price of house.
+
+
+## _b iV] What are the standardized betas for each parameter and what do the values indicate?_
+```{r}
+lm.beta(multi_result)
+sd(house.2$`Sale Price`)
+```
+##### The Standardized beta values indicate the number of standard deviations by which the outcome will change as a result of one standard deviation change in the predictor. Since unit of all these values is Standard Deviation so easy to compare.
+##### Based on the result of Standardized beta values , The Std Dev of House Sale Price is = 244743.4
+
+1. square_feet_total_living - The value is 0.53, this value indicates that as living area of house increases by one std dev the house price increases by (0.53 * 226312.4) = 119945.6 dollars considering effect of all other predictors are held constant.
+
+2. building_grade - The value is 0.27 which indicates that a building grade of house increased by 1 std dev the house price increases by 61104.35 dollars considering effect of all other predictors are held constant.
+
+3. sq_ft_lot - The value is -0.023 (negatively related) which indicates that a increasing the lot size by 1 std dev and the house price will drop by 5205.185 dollars considering effect of all other predictors are held constant.
+
+4. bedrooms - The value is -0.022 (negatively related) which indicates that a increasing the bedroom by 1 std dev and the house price will drop by 4978.873 dollars considering effect of all other predictors are held constant.
+
+5. bath_full_count - The value is 0.010 which indicates that a bath room count of house increased by 1 std dev the house price increases by 2263.124 dollars considering effect of all other predictors are held constant.
+
+6. year_built - The value is 0.052 which indicates that a build of year of house increased by 1 std dev the house price increases by 11768.24 dollars considering effect of all other predictors are held constant.
+
+##  _b v] Calculate the confidence intervals for the parameters in your model and explain what the results indicate._
+```{r}
+confint(multi_result)
+```
+##### The Cnfidence Interval of the standardized beta values are boundaries constructed such that 95% of these samples these boundaris will contain the true value of coefficients  or betas. With values from CI for each predictor we can say that the betas value will be there in population if values lies between these confidence intervals.
+##### Based on above result we can say that - 
+
+1. square_feet_total_living - It is positively correlated with Sale Price and the CI is range is positive and the interval is very small, this means the beta value of this predictor is very close to actual beta value in population.
+
+2. building_grade - It is positively correlated with Sale Price and the CI is range is positive and the interval is very small, this means the beta value of this predictor is very close to actual beta value in population.
+
+3. sq_ft_lot - It is negatively correlated with Sale Price and the CI is range is negative and the interval is very small and will not cross zero, this means the beta value of this predictor is very close to actual beta value in population.
+
+4. bedrooms - It is negatively correlated with Sale Price and the CI is range is negative and the interval is very small and will not cross zero, this means the beta value of this predictor is very close to actual beta value in population.
+
+5. bath_full_count - It is positively correlated with house Sale Price and CI range falls in positive and negative values and interval is large, this means the beta value of this predictor may cross zero and not stay close the actual bets value in population.
+
+6. year_built - It is positively correlated with Sale Price and the CI is range is positive and the interval is very small, this means the beta value of this predictor is very close to actual beta value in population.
+
+## _b vi] (simple regression model) by testing whether this change is significant by performing an analysis of variance._
+```{r}
+anova(simple_result,multi_result)
+```
+##### Based on above result the p-value of second model is 2.2e-16 means very very small number this indicates the second model(multi_result) is significantly improved the fit of the model of data compared with first(simple_result) having F- score is 2839.5
+
+## _b vii] Perform casewise diagnostics to identify outliers and/or influential cases...._
+##### Created new dataframe variable called house_case and stored all the casewise diagnostic result in it.
+```{r}
+house_case <- data.frame(house.2)
+house_case$residuals <- resid(multi_result)
+house_case$stdz.residuals <- rstandard(multi_result)
+house_case$stud.residuals <- rstudent(multi_result)
+house_case$cooks.dist <- cooks.distance(multi_result)
+house_case$dfbeta <- dfbeta(multi_result)
+house_case$dfiit <- dffits(multi_result)
+house_case$leverage <- hatvalues(multi_result)
+house_case$cov.ratio <- covratio(multi_result)
+select <- dplyr::select
+head(house_case %>% select(residuals,stdz.residuals,stud.residuals,cooks.dist,dfbeta,dfiit,leverage,cov.ratio))
+```
+## _b viii] Calculate the standardized residuals using the appropriate command...._
+##### created new column called - large.residual to store in house_cases dataframe
+```{r}
+house_case$large.residual <- house_case$stdz.residuals > 2 | house_case$stdz.residuals < -2
+```
+## _b vix] Use the appropriate function to show the sum of large residuals._
+##### The Sum of large residuals is 
+```{r}
+sum(house_case$large.residual)
+```
+
+## _b vx] Which specific variables have large residuals (only cases that evaluate as TRUE)?_
+##### The predictors those are having large residuals
+We have 4% cases which are outside the limit
+```{r}
+head(house_case %>% filter(large.residual) %>%  select(Sale.Price, sq_ft_lot , building_grade , square_feet_total_living , bedrooms , bath_full_count , year_built))
+```
+
+## _b vxi]  calculating the leverage, cooks distance, and covariance ratios. _
+##### Cook's distance - it is a measure of the overall influence of a case on the model, value greater than 1 cause for concern
+leverage = (k+1)/n , where k = number of predictor and n = number of participants and hat value should be between 0- 1
+```{r}
+head(house_case %>% filter(large.residual) %>%  select(cooks.dist,leverage,cov.ratio))
+```
+##### From the above result, calculated the cooks distance > 1 and found none of the case having cooks distance > 1 that means non of the cases having an undue influence on the model.
+```{r}
+head(house_case %>% filter(large.residual) %>%  select(cooks.dist,leverage,cov.ratio) %>% filter(cooks.dist>1))
+```
+##### The average leverage can be calculated as (k+1)/n
+```{r}
+k <- 7
+n <- nrow(house_case)
+leverage_val = round((k+1)/n,7)
+house_case %>% filter(large.residual) %>%  select(cooks.dist,leverage,cov.ratio) %>% filter(leverage >= leverage_val * 3) %>% nrow()
+```
+##### based on above average leverage we can see there are 64 values above three time average levarage value which is 0.5% of the total cases.
+##### Calculated covariance ratio as 
+```{r}
+k <- 7
+n <- nrow(house_case)
+cov_grter_1 <- 1 + (3*(k+1)/n)
+cov_less_1 <- 1 - (3*(k+1)/n)
+# covariance ratio greater than 1 limit
+print(cov_grter_1)
+# covariance ratio less than 1 limit
+print(cov_less_1)
+house_case %>% filter(large.residual) %>%  select(cooks.dist,leverage,cov.ratio) %>% filter(cov.ratio >= cov_less_1, cov.ratio <= cov_grter_1 ) %>% nrow()
+```
+##### Based on above result of covariance ratio we can say that 1.44% of total cases are outside these limits. But most of them are close to that but not too big or less than these limits. We can say that we do have fairly reliable model that has not been unduly influenced by any large subsets of cases.
+
+## _b vxii] Perform the necessary calculations to assess the assumption of independence and state if the condition is met or not._
+```{r}
+durbinWatsonTest(multi_result)
+```
+#####  Based on this result the value of D-W Statistic is 1.272275 which between 1 and 3. We can say that the condition of assumptions of independence is met.
+
+## _b vxiii]Perform the necessary calculations to assess the assumption of no multicollinearity and state if the condition is met or not _
+##### to test this assumption we are calcualting Variance Inflation Factor (VIF), VIF tolerance and average of VIF
+```{r}
+vif(multi_result)
+1/vif(multi_result)
+mean(vif(multi_result))
+```
+Based on above result - 
+1. The VIF value for the predictors are less than 10 
+2. Tolerance VIF for all the predictors are above 0.2
+3. Average VIF is greater than 1 which is 2.14, which tells that regression may be biased.
+
+## _b vxiv] Visually check the assumptions related to the residuals using the plot() and hist() functions. Summarize what each graph is informing you of and if any anomalies are present._
+```{r}
+plot(multi_result)
+hist(house_case$stud.residuals)
+```
+
+##### Based on the above Plots -
+1. Residuals vs Fitted - This plot shows the randomly distributed points evenly dispersed around the zero residual line. The residuals in the housing data model shows a fairly random pattern which indicates that assumptions of linearity, randomness and homoscedasticity have been met.
+2. Normal Q-Q - This plot shows the deviation from normality, the most of the points in middle of the graph lies on the straight line indicating normality, the data points at the end shows deviation from line mean skewness in data.
+3. Scale Location - The dots are dispersed randomly around the standardized residual line, which indicates that assumptions of linearity, randomness and homoscedasticity have been met.
+4. Residuals vs Leverage - This plot is also shows tha randomly distributed points, which indicates assumptions of linearity, randomness and homoscedasticity have been met.
+5. Histogram of Residuals - Histograms of residual shows the normally distributed residuals, which is good.
+
+## _b vxv] Overall, is this regression model unbiased? If an unbiased regression model, what does this tell us about the sample vs. the entire population model? _
+#####  Based on the above all the analysis done so far we can say that the regression model used to prdict the house price based on predictors is unbiased.
+The assumptions made about these models are validates and are met which tells that the an average, regression model we ran on the sample can be accurately applied to the population. This does mean that even all the assumptions were met , it is possible that a model obtained from this sample may or may not be the same as the population model but likelihood of them being the same is increased.
+
+
+
