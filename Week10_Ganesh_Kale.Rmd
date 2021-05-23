@@ -1,0 +1,132 @@
+---
+title: "Week 10 - Exercise 10.2"
+author: "Ganesh Kale"
+date: "May 22, 2021"
+output:
+  pdf_document: default
+  word_document: default
+---
+# _Exercise 10.2.1 - Thoracic Surgery Analysis_
+
+## Load the required packages
+
+```{r message=FALSE}
+library(readxl)
+library(dplyr)
+library(QuantPsyc)
+library(car)
+library(foreign)
+```
+
+### Load the file to dataframe 
+
+First 5 rows of the data frame:
+
+```{r echo=FALSE}
+thor = read.arff('ThoraricSurgery.arff')
+head(thor, 5)
+# thor_dm <- data.matrix(thor)
+# thor_df <- data.frame(thor_dm)
+# head(thor_df)
+```
+
+### _b.i] Fit a binary logistic regression model to the data set that predicts whether or not the patient survived for one year (the Risk1Y variable) after the surgery. Include a summary using the summary() function in your results._
+
+Changed the baseline of all the binary predictors (T,F) using relevel() function because here we need to predict the survival that means Risky1Yr value as F.
+
+```{r}
+thor_formula <- 'Risk1Yr ~ DGN + PRE4 + PRE5 + PRE7 + PRE8 + PRE9 + PRE10 + PRE11 + PRE14 + PRE17 + PRE19 + PRE25 + PRE30 + PRE32 + AGE'
+thor$PRE7 <- relevel(thor$PRE7, "T")
+thor$PRE8 <- relevel(thor$PRE8, "T")
+thor$PRE9 <- relevel(thor$PRE9, "T")
+thor$PRE10 <- relevel(thor$PRE10, "T")
+thor$PRE11 <- relevel(thor$PRE11, "T")
+thor$PRE17 <- relevel(thor$PRE17, "T")
+thor$PRE19 <- relevel(thor$PRE19, "T")
+thor$PRE25 <- relevel(thor$PRE25, "T")
+thor$PRE30 <- relevel(thor$PRE30, "T")
+thor$PRE32 <- relevel(thor$PRE32, "T")
+thor$Risk1Yr <- relevel(thor$Risk1Yr, "T")
+
+patientModel.1 <-  glm(thor_formula, data = thor, family = binomial())
+summary(patientModel.1)
+```
+
+### _b.ii] According to the summary, which variables had the greatest effect on the survival rate?_
+
+```{r echo=FALSE}
+exp(patientModel.1$coefficients)
+```
+
+Based on the Summary result and odds ratio result above, we can say - 
+
+1. PRE9F - The z-value = 2.799 and p < 0.00512, odds ratio = 3.8270 which is greater than 1 that means as the predictor increases the odds of outcome occurring increases,False value of this predictor is significant.
+
+2. PRE14OC14 -  The z-value = -2.812 and p < 0.00492, odds ratio = 1.8420 which is greater than 1 that means as the predictor increases the odds of outcome occurring increases,False value of this predictor is significant.
+
+3. PRE17F - the z-value = .042, p < 0.04119, odds ratio = 2.4543 which is greater than 1 that means as the predictor increases the odds of outcome occurring increases,False value of this predictor is significant.
+
+4. PRE30F - the z-value = 2.127, p < 0.03342, odds ratio = 2.9058 which is greater than 1 that means as the predictor increases the odds of outcome occurring increases,False value of this predictor is significant.
+
+
+### _b.iii] To compute the accuracy of your model, use the dataset to predict the outcome variable. The percent of correct predictions is the accuracy of your model. What is the accuracy of your model?_
+
+Based on the result, the percentage of correct predictions that means accuracy of model is - 0.8361702 or 83.6170%
+
+Head of the final data frame with residuals and probabilities :
+
+```{r echo=FALSE}
+thor$pred.prob <- fitted(patientModel.1)
+thor$std.resid <- rstandard(patientModel.1)
+thor$stud.resid <- rstudent(patientModel.1)
+thor$dfbeta <- dfbeta(patientModel.1)
+thor$dffit <- dffits(patientModel.1)
+thor$leverage <- hatvalues(patientModel.1)
+thor$model_prob <- predict(patientModel.1, thor, type = "response")
+thor <- thor %>% mutate(model_pred = 1*(model_prob > 0.70) + 0 , Risk1Yr_int = 1 * (Risk1Yr == 'F') + 0)
+head(thor, 5)
+thor <- thor %>% mutate(accurate = 1 * (model_pred == Risk1Yr_int))
+sum(thor$accurate)/nrow(thor)
+```
+
+
+
+# _Exercise 10.2.2 - Binary-Classifier_Data Analysis_
+
+## Load the dataset
+
+Head of the Data frame:
+
+```{r echo=FALSE}
+bin.class <- read.csv("binary-classifier-data.csv")
+head(bin.class)
+
+```
+
+### _2.a] Fit a logistic regression model to the binary-classifier-data.csv dataset_
+
+Summary of the logistic regression model:
+
+```{r}
+
+binclaas.model <- glm(label ~ x + y, data = bin.class, family = binomial())
+
+summary(binclaas.model)
+```
+
+### _2.b.i] What is the accuracy of the logistic regression classifier?_
+
+Accuracy of the logistic regression classifier is :0.512016
+
+
+```{r echo=FALSE}
+
+bin.class$model.prob <- fitted(binclaas.model)
+bin.class <- bin.class %>% mutate(model_pred = 1*(model.prob > 0.75) + 0 )
+bin.class <- bin.class %>% mutate(accurate = 1 * (model_pred == label))
+head(bin.class)
+sum(bin.class$accurate)/nrow(bin.class)
+```
+
+
+
