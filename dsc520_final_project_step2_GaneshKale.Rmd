@@ -1,0 +1,188 @@
+---
+title: "Week 10 - Final Project Step 2"
+author: "Ganesh Kale"
+date: "May 23, 2021"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+# Plan to complete final project:
+1. Load the required packages
+
+2. Load three data sets into three different data frames
+
+3. Join all three data sets into one data set
+
+4. Perform Exploratory Data Analysis - 
+   + 1. Check for missing data or na data in data frame and correct them.
+   + 2. View the data summary and data structure - data types
+   + 3. View descriptive statistics - min, max, std dev, median, count etc
+   + 4. Plot the scatter charts to check the relationship among the features and possible outliers
+   + 5. Plot the distribution charts for features to check data normality
+   + 6. Plot Box chart to see outliers
+   + 7. Fix the outliers from the data set based on the feature and data type
+   + 8. Test for multicollinearity based on scatter plots
+   + 9. Remove the highly correlated features and unwanted features from data set.
+   + 10. Transform the data and or club nultiple columns to create one which makes more impact.
+   + 11. Test for the correlation between features and target variable.
+   + 12. Finalize the features for regression
+   + 13. Transform the data if required for feature variables
+   + 14. Create training, validation and testing data sets by using random or straitified sampling menthods
+   + 15. Select the appropriate method of regression
+   + 16. Run the regression model on training data set
+   + 17. Evaluate the regression result summary
+   + 18. Change or update features or transform data if required based on regression result and re-train the model
+   + 19. Tune the model on validation data set and evaluate result summary
+   + 20. Test the model on test data set and validate the result summary and accuracy of it
+   + 21. Validate the assumption of regression based on result summary
+   + 22. Plot the residual charts and fitted regression data set (prediction vs actual)
+   + 23. Conclude the prediction based on result
+
+## Load the required packages
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+```
+
+## Load three data sets in 3 different data frames
+
+### Austin TX housing main data set and first 5 records
+```{r}
+house_main <- read.csv("project data/austinHousingData.csv")
+head(house_main, 5)
+```
+
+### Austin TX housing area school infromation data set and first 5 records
+
+```{r}
+house_school <-  read.csv("project data/austinHousingData_school_Info.csv")
+head(house_school,5)
+```
+
+### Austin TX house features data set and first 5 records
+
+```{r}
+house_features <- read.csv("project data/austinHousingData_features.csv")
+head(house_features,5)
+```
+
+## Join all three datasets into one data set and display first 5 rows of final data set
+
+```{r}
+temp <- house_main %>% inner_join(house_features, by = 'zpid')
+house <- temp %>% inner_join(house_school, by = "zpid")
+head(house, 5)
+```
+
+## Cleaning data by removing unwanted columns such as property dscription, city name, address, home images, number of photos etc.
+
+```{r}
+house <- subset(house, select = -c(zpid,city,streetAddress,description,numOfPhotos,homeImage,latitude,longitude,latest_saledate, latest_salemonth,latest_saleyear,latestPriceSource))
+
+```
+
+## View na or null values in data set
+
+Based on the below, we can see there are no na or null values in the data set
+
+```{r}
+sum(is.na(house))
+```
+
+## View the data summary and structure 
+
+Data Summary:
+
+```{r}
+summary(house)
+```
+
+Data Structure:
+
+```{r}
+str(house)
+```
+
+## View of the data set - sample 10 records
+
+Sample 10 records from the house data frame:
+
+```{r}
+house %>% sample_n(10)
+```
+
+# Visualization:
+
+'latestPrice' is the target variable, we are going to predict based on the predictors. 
+View the distribution of target variable.
+Based on histogram it seems the target variable is not normally distributed and there are outliers that is higher house prices but house counts are less.  
+
+```{r}
+ggplot(data = house, aes(latestPrice)) + geom_histogram(bins = 100) + xlab("House Price in ($)") 
+```
+
+
+## _Questions for future steps._
+Based on the data set, there are several features which may or may not have direct impact on sale price. In order to choose the jet predictors, need to find the suitable regression method to onley keep relevant predictors.
+
+1. What regression method is suitable to choose the predictors?
+
+2. Which variables need data transformation?
+
+3. How to handle biased data ?
+
+4. Which features will give more sense after clubbing together?
+
+5. What is school size and how to interpret those numbers?
+
+
+## _What information is not self-evident?_
+
+The school size feature does not give much information about impact on house price or area.
+There house features, which explains the how many appliances or features avaible in house but number does not give exact picture on what are those appliances.
+Also property tax rate does not give information about those are current rates or the time of the data recorded or when last tax was paid by house owner.
+
+## _What are different ways you could look at this data?_
+
+The data is explored using statistical methods and using visualizations. To see the basic stats, data summary will be used that provides information about abasic stats.
+If the linear regression is not the right choice then how can non-linear regression or any other regression used to solve the business problem. 
+Different models will be used to check which one is producing the better result or compared the results of the models.
+
+## _How do you plan to slice and dice the data?_
+
+The detailed plan is mentioned in the starting of this document.
+
+## _How could you summarize your data to answer key questions?_ 
+
+The main problem is to predict the house price, in order to tackle this problem I am going to find answers to below questions - 
+1. Identify the variables from the data sets affecting the house prices, e,g, bedrooms, lotsize, yearbuilt, school zone etc.
+2. Train the multiple regression model that quantitatively relates house prices with predictors.
+3. To calculate the accuracy of the model to see how goo fit it is?
+
+## _What types of plots and tables will help you to illustrate the findings to your questions?_
+
+For checking the distribution of the data , I am going to use histograms, histograms are also show the outliers in the distribution.Scatter plot to check multicollinearity among the predictors and correlation between target and predictor variables, this plot is also helpful to see how regression line fitted to actual data versus predicted data.
+Box plot will help identify outliers easily from the features.
+
+1. Scatter plot - To see the correlation between two variables and possible outliers
+2. Histogram - To check data distribution for the different features
+3. Q-Q plot - To check standard normal distribution
+4. correlation matrix - To check the correlation of all the features from the data set
+5. Boxplot - To check outliers and quantiles
+6. Density plot - To check the distribution
+7. Bar Chart - Data distribution of categorical variables.
+
+
+## _Do you plan on incorporating any machine learning techniques to answer your research questions? Explain._
+
+To solve the housing price prediction problem, I am going to use machine learning techniques. Basically there are three machine learning techniques, out of three the first which is Supervised Machine Learning, I am going to incorporate to solve this problem.
+The reason I am going to use Supervised machine Learning because this technique is used to predict the outcomes accurately and in data set the outcome variable already exist that means we have labels ready and supervised machine learning is basically used on labelled datasets.
+
+
+
+
+
+
