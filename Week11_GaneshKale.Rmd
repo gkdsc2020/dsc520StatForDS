@@ -1,0 +1,292 @@
+---
+title: "Week 11 - Exercise 11.2"
+author: "Ganesh Kale"
+date: "May 30, 2021"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+## _K-Nearest Neighbors Algorithm_
+
+## Load the required packages
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(class)
+library(caTools)
+library(e1071)
+library(factoextra)
+```
+
+
+## Load the Data Sets
+
+## binary classiffier data:
+
+```{r echo=FALSE}
+binary <- read.csv("binary-classifier-data.csv")
+head(binary, 5)
+```
+
+## trinary classifier data:
+
+```{r echo=FALSE}
+trinary <- read.csv("trinary-classifier-data.csv")
+head(trinary, 5)
+```
+
+## Scatter plot - Binary dataset
+
+```{r echo=FALSE}
+ggplot(data = binary, aes(x = x, y = y)) + geom_point(color = 'blue', alpha = 0.4)
+```
+
+## Scatter plot - Trinary dataset
+
+```{r echo=FALSE}
+ggplot(data = trinary, aes(x = x, y = y)) + geom_point(color = 'blue', alpha = 0.4)
+```
+
+## _fit k-nearest neighbor model to binary data set for k = 3,5,10,15,20,25:_
+
+```{r echo=FALSE}
+set.seed(123)
+split <- sample.split(binary, SplitRatio = 0.7)
+
+x.train <- subset(binary, split == TRUE)
+x.test <- subset(binary, split == FALSE)
+
+binaryk3 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 3)
+accuracy3 <- 100 * sum(x.test$label == binaryk3)/nrow(x.test)
+binaryk5 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 5)
+accuracy5 <- 100 * sum(x.test$label == binaryk5)/nrow(x.test)
+binaryk10 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 10)
+accuracy10 <- 100 * sum(x.test$label == binaryk10)/nrow(x.test)
+binaryk15 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 15)
+accuracy15 <- 100 * sum(x.test$label == binaryk15)/nrow(x.test)
+binaryk20 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 20)
+accuracy20 <- 100 * sum(x.test$label == binaryk20)/nrow(x.test)
+binaryk25 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 25)
+accuracy25 <- 100 * sum(x.test$label == binaryk25)/nrow(x.test)
+```
+
+## _plot the graph_
+
+```{r echo=FALSE}
+bi_graph <- data.frame(k = c(3,5,10,15,20,25), accuracy = c(accuracy3,accuracy5,accuracy10,accuracy15,accuracy20,accuracy25))
+bi_graph
+
+ggplot(data = bi_graph, aes(x=k, y= accuracy)) + geom_point(color = 'blue', size=2) + geom_line(color = 'green')
+
+```
+
+
+
+## _fit k-nearest neighbor model to trinary data set for k = 3,5,10,15,20,25:_
+
+```{r echo=FALSE}
+set.seed(42)
+split <- sample.split(trinary, SplitRatio = 0.7)
+
+x.train <- subset(trinary, split == TRUE)
+x.test <- subset(trinary, split == FALSE)
+
+trinaryk3 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 3)
+taccuracy3 <- 100 * sum(x.test$label == trinaryk3)/nrow(x.test)
+trinaryk5 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 5)
+taccuracy5 <- 100 * sum(x.test$label == trinaryk5)/nrow(x.test)
+trinaryk10 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 10)
+taccuracy10 <- 100 * sum(x.test$label == trinaryk10)/nrow(x.test)
+trinaryk15 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 15)
+taccuracy15 <- 100 * sum(x.test$label == trinaryk15)/nrow(x.test)
+trinaryk20 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 20)
+taccuracy20 <- 100 * sum(x.test$label == trinaryk20)/nrow(x.test)
+trinaryk25 <- knn(train = x.train,test = x.test, cl = x.train$label,k = 25)
+taccuracy25 <- 100 * sum(x.test$label == trinaryk25)/nrow(x.test)
+```
+
+## _plot the graph_
+
+```{r echo=FALSE}
+tri_graph <- data.frame(k = c(3,5,10,15,20,25), taccuracy = c(taccuracy3,taccuracy5,taccuracy10,taccuracy15,taccuracy20,taccuracy25))
+tri_graph
+ggplot(data = tri_graph, aes(x=k, y= taccuracy)) + geom_point(color = 'blue',size=2) + geom_line(color = 'green')
+
+```
+
+
+## _Looking back at the plots of the data, do you think a linear classifier would work well on these datasets?_
+
+Based on the plots of binary and trinary data, the linear classifier will not work because, linear classifiers classify data into lables based on a linear combinations of input features. These classifiers separate data using a line or plane and can be used to classify data that is linearly separable. The data in these two datasets can not be linearly separated.
+
+
+## _How does the accuracy of your logistic regression classifier from last week compare?  Why is the accuracy different between these two methods?_
+
+The accuracy score of binary data was 0.512016 or 52.00%, with KNN algorithm or ML techniques the accuracy score is 98.4% for k = 15 and k = 25. Compared to Logistic regression the accuracy score of KNN is much higher and close to 100%.
+The reason of different accuracy score between these two models is because KNN supports non-linear solutions while logistic only supports linear solutions.
+
+
+
+# _Clustering Exercise_
+
+## Load the clustering dataset:
+
+```{r echo=FALSE}
+cluster <- read.csv("clustering-data.csv")
+head(cluster, 5)
+```
+
+## _Plot the dataset using a scatter plot_
+
+```{r echo=FALSE}
+cluster %>% ggplot(aes(x=x,y=y)) + geom_point(color = 'blue', alpha = 0.4)
+```
+
+## _Fit the data set using the k-means algorithm from k=2 to k=12_
+
+```{r echo=FALSE}
+clusterk2 <- kmeans(cluster, centers = 2, nstart = 25)
+clusterk3 <- kmeans(cluster, centers = 3, nstart = 25)
+clusterk4 <- kmeans(cluster, centers = 4, nstart = 25)
+clusterk5 <- kmeans(cluster, centers = 5, nstart = 25)
+clusterk6 <- kmeans(cluster, centers = 6, nstart = 25)
+clusterk7 <- kmeans(cluster, centers = 7, nstart = 25)
+clusterk8 <- kmeans(cluster, centers = 8, nstart = 25)
+clusterk9 <- kmeans(cluster, centers = 9, nstart = 25)
+clusterk10 <- kmeans(cluster, centers = 10, nstart = 25)
+clusterk11 <- kmeans(cluster, centers = 11, nstart = 25)
+clusterk12 <- kmeans(cluster, centers = 12, nstart = 25)
+```
+
+## _Create a scatter plot of the resultant clusters for each value of k_
+
+## Cluster Plot for k =  2
+
+```{r echo=F}
+# clsk <- 2:12
+# clsy <- c(clusterk2$cluster,clusterk3$cluster,clusterk4$cluster,clusterk5$cluster,clusterk6$cluster,clusterk7$cluster,clusterk8$cluster,clusterk9$cluster,clusterk10$cluster,clusterk11$cluster,clusterk12$cluster)
+# cls.df <- data.frame(clsk, clsy)
+# ggplot(data = cls.df, aes(x = clsk, y = clsy)) + geom_point()
+fviz_cluster(clusterk2, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  3
+
+```{r echo=F}
+fviz_cluster(clusterk3, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  4
+
+```{r echo=F}
+fviz_cluster(clusterk4, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  5
+
+```{r echo=F}
+fviz_cluster(clusterk5, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  6
+
+```{r echo=F}
+fviz_cluster(clusterk6, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  7
+
+```{r echo=F}
+fviz_cluster(clusterk7, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  8
+
+```{r echo=F}
+fviz_cluster(clusterk8, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  9
+
+```{r echo=F}
+fviz_cluster(clusterk9, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  10
+
+```{r echo=F}
+fviz_cluster(clusterk10, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  11
+
+```{r echo=F}
+fviz_cluster(clusterk11, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## Cluster Plot for k =  12
+
+```{r echo=F}
+fviz_cluster(clusterk12, data = cluster,
+             # palette = c("#2E9FDF", "#00AFBB", "#E7B800"), 
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw() )
+```
+
+## _plot it as a line chart where k is the x-axis and the average distance is the y-axis._
+
+```{r echo=FALSE}
+k.values <- 2:12
+avrage.distance <- sapply(2:12, function(k) {kmeans(cluster, k, nstart = 25, iter.max = 11)$tot.withinss})
+plot(k.values, avrage.distance , type = "b", pch = 19, frame = F)
+```
+
+
+## _Looking at the graph you generated in the previous example, what is the elbow point for this dataset?_
+
+Based on the line chart, the elbow point is at 5, which means that right number of clusters for this data set is 5.
+
+
