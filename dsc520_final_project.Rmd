@@ -1,0 +1,192 @@
+---
+title: "DSC520 Final Project - House Price Prediction"
+author: "Ganesh Kale"
+date: "June 4, 2021"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+# _Introduction:_
+
+House Prices in USA are booming and house prices will continue to race ahead, at nearly twice the pace predicted before this year. This is what we hear or read when talk about housing market in USA. Buying house is very critical job, one should aware of lots of things before buying house and when buying house nobody sure about when is the right time to buy house and wants to have some tool that would consider all the factors determining house price and predict the house price.
+Predicting the house price is challenging but doable and with help of machine learning algorithms this can be achieved. 
+This is the topic for final project - predicting the house price based on the house features, area features.
+The data sets I obtained are from houses in Austin TX. Housing market in USA continue to rise in all of the country's major cities. The Austin TX market is also one of the hottest market in 2021.
+
+# _Data Set Information:_
+
+The data set has total 47 unique features and it was uploaded with house images for each house listed in the data set and given the reference of each house to the data set as an additional feature. For this project purpose, I have not included the house images since the research and analysis would be completely based on the features provided for each house instead of the photos.
+There are three files have been created and main file has all the information about houses, second file has information about the school area where the house is located and third file provides the house features information, such as what are the features available in each listed house.
+
+Few features form the data sets - address of the property, number of garage spaces, year built, number of bedrooms, bathrooms, area of house, area of loft , school zone, appliances, view etc.
+
+# _Problem Statement:_
+
+In order to predict the house prices from given house features and area features, the main business problems are: 
+
+1. Identify the features that impact house Price.
+
+2. Predict the house prices based on identified features.
+
+
+# _Approach to Solve Business Problems:_
+
+To tackle the above mentioned business problems, the approach is - 
+
+1. Exploratory Data Analysis - identify missing data, duplicate data, outliers and fix them, check distributions of the features, check correlations of features, transforming the data, finalizing the predictors.
+
+2. Modeling - Fitting the MLR model on house data set and displaying the result summary
+
+3. Result Evaluation - Evaluating the model result by testing model on test dataset and validating the result.
+
+# _Loading Required Packages:_
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(QuantPsyc)
+library(car)
+library(plyr)
+library(tidyr)
+```
+
+
+# _Loading the data sets and merging all three data sets into one data frame:_
+
+### Austin TX housing main data set with property information
+```{r}
+house_main <- read.csv("project data/austinHousingData.csv")
+```
+
+### Austin TX housing area school infromation data set
+
+```{r}
+house_school <-  read.csv("project data/austinHousingData_school_Info.csv")
+```
+
+### Austin TX house features data set 
+
+```{r}
+house_features <- read.csv("project data/austinHousingData_features.csv")
+
+```
+
+## Joining all three datasets into one data set and display first 5 rows of final data set
+
+```{r echo=FALSE}
+temp <- house_main %>% inner_join(house_features, by = 'zpid')
+house <- temp %>% inner_join(house_school, by = "zpid")
+
+for (col in colnames(house)){
+  if ((class(house[, col]) == "character") | (class(house[, col]) == "logical")){
+    house[,col] <- as.factor(house[,col])
+  }
+}
+
+head(house, 5)
+```
+
+
+# _Exploratory Data Analysis:_
+
+## Cleaning data by removing unwanted columns such as property dscription, city name, address, home images, number of photos etc.
+
+Created new column called property age from year built 
+
+```{r echo=FALSE}
+
+house$houseAge <- 2020 - house$yearBuilt
+
+house <- subset(house, select = -c(zpid,city,streetAddress,description,numOfPhotos,homeImage,latitude,longitude,latest_saledate, latest_salemonth,latest_saleyear,latestPriceSource,zipcode,numPriceChanges,numOfAccessibilityFeatures,MedianStudentsPerTeacher,avgSchoolSize,hasCooling,hasHeating,hasSpa,hasView,yearBuilt,numOfAppliances,numOfParkingFeatures,numOfPatioAndPorchFeatures,numOfSecurityFeatures,numOfWaterfrontFeatures,numOfWindowFeatures,numOfElementarySchools,avgSchoolDistance,numOfMiddleSchools,parkingSpaces,numOfCommunityFeatures))
+
+```
+
+## View na or null values in data set
+
+Based on the below, we can see there are no na or null values in the data set
+
+```{r echo=FALSE}
+sum(is.na(house))
+```
+
+Exploring Features distribution and fixing outliers if any.
+Removed the ourliers from the house data set.
+
+```{r echo=FALSE, message=FALSE}
+
+house <- house %>% filter(garageSpaces < 5, livingAreaSqFt < 5000, latestPrice < 1000000, lotSizeSqFt < 25000,numOfBathrooms < 7, numOfBathrooms > 0,numOfBedrooms < 7,numOfStories < 3 , houseAge < 75, homeType != "Other",homeType != "Vacant Land", homeType != "Residential" )
+
+ggplot(data = house, aes(x = latestPrice)) + geom_histogram(color = 'green',fill = 'blue', alpha = 0.5) + xlab('House Price') + ylab("Count") + ggtitle("House Price Distribution")
+ggplot(data = house, aes(x = lotSizeSqFt)) + geom_histogram(color = 'green',fill = 'blue', alpha = 0.5) + xlab('Lot Size(SqFt)') + ylab("Count") + ggtitle("Lot Size Distribution")
+ggplot(data = house, aes(x = livingAreaSqFt)) + geom_histogram(color = 'green',fill = 'blue', alpha = 0.5) + xlab('Living Area(SqFt)') + ylab("Count") + ggtitle("Living Area Distribution")
+ggplot(data = house, aes(x = avgSchoolRating)) + geom_histogram(color = 'green',fill = 'blue', alpha = 0.5) + xlab('Avg School Ratings') + ylab("Count") + ggtitle("Avg School Ratings Distribution")
+ggplot(data = house, aes(x = houseAge)) + geom_histogram(color = 'green',fill = 'blue', alpha = 0.5) + xlab('House Age(Years)') + ylab("Count") + ggtitle("House Age Distribution")
+
+dim(house)
+```
+
+
+## Predictor Selection:
+Since this is Multiple Linear Regression Problem, We are going to test Multicollinearity of predictors. The Predictors should not be perfectly correlated to each other is one of the assumptions in MLR.
+Finalized the predictors, the list of predictors are:
+
+```{r echo=FALSE}
+colnames(house)
+```
+
+
+# _Modeling:_
+
+## Fitting model and displaying the result summary:
+
+```{r echo=FALSE}
+formula <- "latestPrice ~ propertyTaxRate+garageSpaces+hasAssociation+hasGarage+homeType+lotSizeSqFt+livingAreaSqFt+numOfBathrooms+numOfBedrooms+numOfStories+numOfPrimarySchools+numOfHighSchools+avgSchoolRating+houseAge"
+
+house.model <- lm(formula = formula, data = house)
+summary(house.model)
+
+```
+
+
+# _Result Evaluation:_
+
+Based on the above result - 
+
+1. R-squared value is 0.4913 or 49.13% which tells that how much variability in the outcome is accounted for by the predictors. Here this model accounts for 49% variability in house prices by selected predictors. So, There could be other variables that might impact house price.
+
+2. Predictors estimated values indicates that a unit increase in each holding all other predictors constant will increase or decrease (based on the sign) house price by the value of predictor.
+For Example - 
+livingAreaSqFt: The living area increases by one square feet, the house value will increase by 125 dollars.
+avgSchoolRating: The average school rating increase by one unit will increase the house price by 23550 dollars.
+
+3. The Pr(>|t|) value for each predictor shows the estimated value of predictor is statistcally significant or not.
+For Example - 
+propertyTaxRate: The p-value is less than 0.05 or 5% so this factor will contribute in house price prediction.
+
+4. F-statistics value is 652.6 and corresponding p-value is less than 0.05, which shows that the regression model results in significant better prediction of house prices.
+
+5. Overall the house price prediction model will produce the house prices significantly well.
+
+# _Implications:_
+
+Based on the overall analysis, we can say that the model used for predicting house price will provide better result, which implies that if someone wants to have house information what they are looking for and pass these information to model, it would predict the somewhat accurate price of the house they are looking for.
+
+# _Limitations:_
+
+When talking about the limitation of this analysis and model, There is always improvement since the data we used for house prediction was limited, for example we did not have data related house such as flood zone,crime rate in that area, median income of that neighborhood etc.
+With the help of more and accurate information will definitely improve the model score and prediction power.
+Also, model can be improved by implementing the different methods of regression to select right number of predictors such as - Stepwise method, all-subsets method, force entry method etc.
+
+# _Conclusion:_
+
+Overall, by performing the exploratory data analysis and regression analysis, we were able to handle the problem statement mentioned above.
+With the help of exploratory data analysis the first problem statement was resolved to identify the features that are impacting the overall house prices.
+Regression analysis helped to tackle second question wherein we need to predict the house price based on given features of house and property area. 
+The Multiple Linear Regression model built to tackle second question on predicting house price and based on the result summary the model we built is statistically significant and predict house price.
+
+After all, the above performed analysis on house price prediction helped to solve both of the business problems.
+
+# _END_
+
